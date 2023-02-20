@@ -1,0 +1,30 @@
+{{ define "inicio" }}
+{{template "cabecera"}}
+
+<!--Enlace para ir a la plantilla crear usuario-->
+<a name="" id="" class="btn btn-primary" href="/crear" role="button">Agregar Empleado</a>
+<p></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{range.}}
+        <tr>
+            <td scope="row">{{.Id}}</td>
+            <td>{{.Nombre}}</td>
+            <td>{{.Correo}}</td>
+            <td>Editar | Borrar</td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
+
+{{template "pie"}}
+{{end}}
