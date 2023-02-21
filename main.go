@@ -43,8 +43,28 @@ func main() {
 	http.HandleFunc("/", Inicio)
 	http.HandleFunc("/crear", Crear)
 	http.HandleFunc("/insertar", Insertar)
+	http.HandleFunc("/borrar", Borrar)
+	http.HandleFunc("/editar", Editar)
+	http.HandleFunc("/actualizar", Actualizar)
+
 	log.Println("servidor corriendo....")
 	http.ListenAndServe(":8080", nil)
+}
+
+// funcion para borrar datos de la tabla
+func Borrar(rw http.ResponseWriter, r *http.Request) {
+	idEmpleado := r.URL.Query().Get("id")
+	fmt.Println(idEmpleado)
+
+	conexionEstablecida := conxionBD()
+	borrarRegistro, err := conexionEstablecida.Prepare(`delete from empleado where id=$1`)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	borrarRegistro.Exec(idEmpleado)
+
+	http.Redirect(rw, r, "/", 301)
 }
 
 // funciona para leer los elementos de la tabla empleado
@@ -87,6 +107,31 @@ func Inicio(rw http.ResponseWriter, r *http.Request) {
 	//plantillas.ExecuteTemplate(rw, "inicio", nil)
 }
 
+// funcion que me permite editar elementos en la base de datos
+func Editar(rw http.ResponseWriter, r *http.Request) {
+	idEmpleado := r.URL.Query().Get("id")
+	fmt.Println(idEmpleado)
+
+	conexionEstablecida := conxionBD()
+	Regristro, err := conexionEstablecida.Query(`select * from empleado where id=$1`, idEmpleado)
+
+	empleado := Empleado{}
+	for Regristro.Next() {
+		var id int
+		var nombre, correo string
+		err = Regristro.Scan(&id, &nombre, &correo)
+		if err != nil {
+			panic(err.Error())
+		}
+		empleado.Id = id
+		empleado.Nombre = nombre
+		empleado.Correo = correo
+
+	}
+	fmt.Println(empleado)
+	plantillas.ExecuteTemplate(rw, "editar", empleado)
+}
+
 // funcion handler que nos envia a la plantilla que tiene
 // el formulario para agregar usuario
 func Crear(rw http.ResponseWriter, r *http.Request) {
@@ -105,6 +150,26 @@ func Insertar(w http.ResponseWriter, r *http.Request) {
 			panic(err.Error())
 		}
 		insertarRegristro.Exec(nombre, correo)
+
+		http.Redirect(w, r, "/", 301)
+
+	}
+}
+
+// funcion que actualiza los campos de la base de datos
+func Actualizar(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		id := r.FormValue("id")
+		nombre := r.FormValue("nombre")
+		correo := r.FormValue("correo")
+
+		conexionEstablecida := conxionBD()
+		modificarRegristro, err := conexionEstablecida.Prepare(`update empleado set nombre=$1 ,correo=$2 where id=$3`)
+		//update empleado set nombre='soyelsiete' ,correo='qq@gmail.com' where id=7
+		if err != nil {
+			panic(err.Error())
+		}
+		modificarRegristro.Exec(nombre, correo, id)
 
 		http.Redirect(w, r, "/", 301)
 
